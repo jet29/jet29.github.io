@@ -1,0 +1,31 @@
+body{
+  margin: 0px;
+}
+
+a{
+  color: white;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 15% auto 15%;
+  grid-gap: 10px;
+  background-color: #fff;
+  color: #444;
+}
+
+.header {
+  grid-column-start: 2;
+  background-color: #0000ff;
+  color: #fff;
+  padding: 20px;
+  font-size: 150%;
+}
+
+.item {
+  grid-column-start: 2;
+  background-color: #444;
+  color: #fff;
+  padding: 20px;
+  font-size: 150%;
+}
