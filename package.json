@@ -17,6 +17,6 @@
   },
   "homepage": "https://github.com/jet29/jet29.github.io#readme",
   "dependencies": {
-    "three": "^0.128.0"
+    "three": "^0.137.0"
   }
 }
