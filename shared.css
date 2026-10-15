@@ -1,0 +1,118 @@
+:root {
+  --bg: #0b0e17;
+  --fg: #e6e9f2;
+  --muted: #8a93ad;
+  --accent: #7dd3fc;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+body.demo { overflow: hidden; }
+
+canvas.scene {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* the strip of controls under every demo */
+footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
+  padding: 20px 24px;
+  color: var(--muted);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+footer > * { pointer-events: auto; }
+
+footer a {
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 1px solid #2a3147;
+}
+footer a:hover { color: var(--fg); }
+
+label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+input[type="range"] {
+  width: 140px;
+  accent-color: var(--accent);
+}
+
+output, .num { min-width: 2.6em; font-variant-numeric: tabular-nums; }
+
+button, select {
+  font: inherit;
+  color: var(--fg);
+  background: #161c2e;
+  border: 1px solid #2a3147;
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+button:hover, select:hover { border-color: var(--muted); }
+
+/* the intro page */
+main {
+  max-width: 36em;
+  margin: 0 auto;
+  padding: 12vh 24px 48px;
+}
+
+main h1 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+main > p { margin: 0 0 32px; color: var(--muted); }
+
+main ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+main li + li { margin-top: 10px; }
+
+main li a {
+  display: block;
+  padding: 14px 16px;
+  color: var(--fg);
+  text-decoration: none;
+  border: 1px solid #1d2438;
+  border-radius: 10px;
+  transition: border-color 0.15s, background 0.15s;
+}
+main li a:hover { border-color: var(--accent); background: #101523; }
+
+main li a strong { display: block; font-weight: 600; }
+main li a span { color: var(--muted); font-size: 13px; }
+
+@media (max-width: 600px) {
+  footer { padding: 16px; gap: 8px 16px; }
+  main { padding-top: 8vh; }
+}
