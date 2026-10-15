@@ -24,37 +24,19 @@ html, body {
   display: block;
 }
 
-header, footer {
+footer {
   position: fixed;
   left: 0;
   right: 0;
-  padding: 20px 24px;
-  pointer-events: none;
-}
-
-header { top: 0; }
-footer {
   bottom: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 24px;
+  padding: 20px 24px;
   color: var(--muted);
   font-size: 13px;
-}
-
-h1 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-}
-
-header p {
-  margin: 4px 0 0;
-  max-width: 34em;
-  color: var(--muted);
-  font-size: 13px;
+  pointer-events: none;
 }
 
 label {
@@ -72,14 +54,6 @@ input[type="range"] {
 output { min-width: 2.6em; font-variant-numeric: tabular-nums; }
 #count { font-variant-numeric: tabular-nums; }
 
-footer a {
-  margin-left: auto;
-  color: var(--muted);
-  pointer-events: auto;
-}
-footer a:hover { color: var(--fg); }
-
 @media (max-width: 600px) {
-  header, footer { padding: 16px; }
-  footer a { margin-left: 0; }
+  footer { padding: 16px; }
 }

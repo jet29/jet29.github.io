@@ -5,5 +5,3 @@ bell curve under the binomial that predicts them. The slider biases the coin.
 
 Static: `index.html`, `index.css`, `galton.js`, with three.js from a CDN. No build step; open
 `index.html` from any static server (`py -3 -m http.server`).
-
-`threejs-examples/` holds older experiments that load three.js from the committed `node_modules`.

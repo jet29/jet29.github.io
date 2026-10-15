@@ -3,23 +3,24 @@
 // motion smooth at any frame rate and makes the pile exactly binomial, which is the point.
 import * as THREE from 'three';
 
-const ROWS = 14;                 // peg rows; the bins are ROWS + 1
+const ROWS = 20;                 // peg rows; the bins are ROWS + 1
 const BINS = ROWS + 1;
-const S = 1;                     // peg spacing
-const R = 0.23;                  // ball radius
-const PEG_R = 0.09;
+const SX = 1.3;                  // peg spacing across: wider than tall, so the board suits a landscape screen
+const SY = 0.7;                  // peg spacing down
+const R = 0.2;                   // ball radius
+const PEG_R = 0.08;
 const REST = R + PEG_R;          // a ball sitting on a peg
-const BIN_H = 12;
+const BIN_H = 8;
 const TOP_Y = 0;                 // first peg row
-const BIN_TOP = TOP_Y - ROWS * S;
+const BIN_TOP = TOP_Y - ROWS * SY;
 const BIN_BOTTOM = BIN_TOP - BIN_H;
-const SPAWN_Y = TOP_Y + 3;
-const COLS = 2;                  // settled balls stack two per row
-const COL_X = 0.235;
+const SPAWN_Y = TOP_Y + 2.2;
+const COL_X = [-0.42, 0, 0.42];  // settled balls stack three per row
+const COLS = COL_X.length;
 const CAPACITY = COLS * Math.floor(BIN_H / (2 * R));
-const MAX_BALLS = 800;
-const HOP = 0.16;                // seconds from one peg row to the next
-const SPAWN_EVERY = 0.1;
+const MAX_BALLS = 1400;
+const HOP = 0.15;                // seconds from one peg row to the next
+const SPAWN_EVERY = 0.08;
 const FADE = 0.8;
 
 let p = 0.5;                     // chance of going right at a peg
@@ -34,18 +35,21 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0b0e17);
 
-const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 200);
-const FRAME_H = SPAWN_Y + 1 - (BIN_BOTTOM - 1);
-const FRAME_W = BINS * S + 2;
-const FRAME_CY = (SPAWN_Y + 1 + BIN_BOTTOM - 1) / 2;
+const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 200);
+const FRAME_TOP = SPAWN_Y + 0.8;
+const FRAME_BOTTOM = BIN_BOTTOM - 0.8;
+const FRAME_H = FRAME_TOP - FRAME_BOTTOM;
+const FRAME_W = BINS * SX + 1.6;
+const FRAME_CY = (FRAME_TOP + FRAME_BOTTOM) / 2;
 
 function resize() {
   const w = canvas.clientWidth, h = canvas.clientHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
   const t = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-  const d = Math.max(FRAME_H / (2 * t), FRAME_W / (2 * t * camera.aspect));
-  camera.position.set(0, FRAME_CY, d * 1.05);
+  // the rocking swings the edges toward the camera, hence the margin
+  const d = Math.max(FRAME_H / (2 * t), FRAME_W / (2 * t * camera.aspect)) * 1.08;
+  camera.position.set(0, FRAME_CY + d * 0.06, d);
   camera.lookAt(0, FRAME_CY, 0);
   camera.updateProjectionMatrix();
 }
@@ -55,8 +59,8 @@ scene.add(new THREE.HemisphereLight(0xbfd4ff, 0x202030, 0.7));
 const sun = new THREE.DirectionalLight(0xffffff, 1.6);
 sun.position.set(6, 10, 14);
 scene.add(sun);
-const fill = new THREE.PointLight(0x7dd3fc, 60, 0, 2);
-fill.position.set(-8, 2, 8);
+const fill = new THREE.PointLight(0x7dd3fc, 80, 0, 2);
+fill.position.set(-12, 2, 8);
 scene.add(fill);
 
 const board = new THREE.Group();
@@ -81,7 +85,7 @@ const pegs = new THREE.InstancedMesh(
   let n = 0;
   for (let i = 0; i < ROWS; i++) {
     for (let j = 0; j <= i; j++) {
-      m.makeTranslation((j - i / 2) * S, TOP_Y - i * S, 0);
+      m.makeTranslation((j - i / 2) * SX, TOP_Y - i * SY, 0);
       pegs.setMatrixAt(n++, m);
     }
   }
@@ -92,10 +96,10 @@ board.add(pegs);
 const wallMat = new THREE.MeshStandardMaterial({ color: 0x3a4460, roughness: 0.5, metalness: 0.2, transparent: true, opacity: 0.85 });
 for (let k = 0; k <= BINS; k++) {
   const wall = new THREE.Mesh(new THREE.BoxGeometry(0.06, BIN_H, 0.6), wallMat);
-  wall.position.set((k - BINS / 2) * S, BIN_TOP - BIN_H / 2, 0);
+  wall.position.set((k - BINS / 2) * SX, BIN_TOP - BIN_H / 2, 0);
   board.add(wall);
 }
-const floor = new THREE.Mesh(new THREE.BoxGeometry(BINS * S + 0.06, 0.06, 0.6), wallMat);
+const floor = new THREE.Mesh(new THREE.BoxGeometry(BINS * SX + 0.06, 0.06, 0.6), wallMat);
 floor.position.set(0, BIN_BOTTOM - 0.03, 0);
 board.add(floor);
 
@@ -114,7 +118,7 @@ balls.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
 board.add(balls);
 
 // the expected pile, as a line
-const CURVE_N = 120;
+const CURVE_N = 160;
 const curveGeo = new THREE.BufferGeometry();
 curveGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(CURVE_N * 3), 3));
 const curve = new THREE.Line(curveGeo, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 }));
@@ -125,12 +129,13 @@ board.add(curve);
 const CHOOSE = [];
 for (let k = 0, c = 1; k <= ROWS; k++) { CHOOSE.push(c); c = (c * (ROWS - k)) / (k + 1); }
 const pmf = (k) => CHOOSE[k] * p ** k * (1 - p) ** (ROWS - k);
-const binX = (k) => (k - ROWS / 2) * S;
+const binX = (k) => (k - ROWS / 2) * SX;
+const PER_BALL = (2 * R) / COLS;   // how much higher a bin's pile gets per ball
 
 function updateCurve(total) {
-  const pts = [new THREE.Vector3(binX(0) - S, BIN_BOTTOM, 0)];
-  for (let k = 0; k < BINS; k++) pts.push(new THREE.Vector3(binX(k), BIN_BOTTOM + total * pmf(k) * R, 0));
-  pts.push(new THREE.Vector3(binX(ROWS) + S, BIN_BOTTOM, 0));
+  const pts = [new THREE.Vector3(binX(0) - SX, BIN_BOTTOM, 0)];
+  for (let k = 0; k < BINS; k++) pts.push(new THREE.Vector3(binX(k), BIN_BOTTOM + total * pmf(k) * PER_BALL, 0));
+  pts.push(new THREE.Vector3(binX(ROWS) + SX, BIN_BOTTOM, 0));
   const pos = curveGeo.attributes.position;
   new THREE.CatmullRomCurve3(pts).getPoints(CURVE_N - 1).forEach((v, i) => pos.setXYZ(i, v.x, v.y, v.z));
   pos.needsUpdate = true;
@@ -166,7 +171,7 @@ function spawn() {
   const slot = counts[k]++;
   if (counts[k] >= CAPACITY) draining = true;
   live.push({
-    idx, path, k, slot, row: -1, t: 0, dur: 0.35,
+    idx, path, k, slot, row: -1, t: 0, dur: 0.3,
     x0: 0, y0: SPAWN_Y, x1: 0, y1: TOP_Y + REST, z: (Math.random() - 0.5) * 0.16,
   });
 }
@@ -177,15 +182,15 @@ function advance(b) {
   b.x0 = b.x1; b.y0 = b.y1;
   if (b.row < ROWS) {
     // bounce off this row's peg to the next row (or to the mouth of the bin after the last row)
-    b.x1 = b.x0 + (b.path[b.row] ? 0.5 : -0.5) * S;
-    b.y1 = TOP_Y - (b.row + 1) * S + REST;
+    b.x1 = b.x0 + (b.path[b.row] ? 0.5 : -0.5) * SX;
+    b.y1 = TOP_Y - (b.row + 1) * SY + REST;
     b.dur = HOP;
     return;
   }
   // into the bin, onto the place reserved for it
-  b.x1 = binX(b.k) + (b.slot % COLS ? COL_X : -COL_X);
+  b.x1 = binX(b.k) + COL_X[b.slot % COLS];
   b.y1 = BIN_BOTTOM + R + Math.floor(b.slot / COLS) * 2 * R;
-  b.dur = 0.1 + (b.y0 - b.y1) * 0.04;
+  b.dur = 0.1 + (b.y0 - b.y1) * 0.045;
 }
 
 const ease = (u) => u * u * (3 - 2 * u);
@@ -220,7 +225,7 @@ function step(dt) {
       x = b.x0; y = THREE.MathUtils.lerp(b.y0, b.y1, u * u);
     } else if (b.row < ROWS) {             // hopping peg to peg
       x = THREE.MathUtils.lerp(b.x0, b.x1, ease(u));
-      y = THREE.MathUtils.lerp(b.y0, b.y1, u) + Math.sin(Math.PI * u) * 0.2;
+      y = THREE.MathUtils.lerp(b.y0, b.y1, u) + Math.sin(Math.PI * u) * 0.18;
     } else {                               // dropping into the bin
       x = THREE.MathUtils.lerp(b.x0, b.x1, Math.min(1, u * 3));
       y = THREE.MathUtils.lerp(b.y0, b.y1, u * u);
@@ -266,8 +271,8 @@ function frame() {
   const dt = Math.min(0.05, clock.getDelta());
   step(dt);
   const t = clock.elapsedTime;
-  board.rotation.y = Math.sin(t * 0.25) * 0.28;
-  board.rotation.x = -0.04;
+  board.rotation.y = Math.sin(t * 0.22) * 0.22;
+  board.rotation.x = -0.06;
   updateCurve(counts.reduce((a, b) => a + b, 0));
   if (settled !== shown) { shown = settled; countOut.textContent = `${settled} ball${settled === 1 ? '' : 's'}`; }
   renderer.render(scene, camera);
